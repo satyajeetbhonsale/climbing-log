@@ -12,6 +12,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { ActivityCalendar } from 'react-activity-calendar';
+import 'react-activity-calendar/tooltips.css';
 import { useSessionsData } from '../lib/useSessionsData';
 import { FRENCH_SPORT, FONT, COLOR } from '../lib/grades';
 import { formatLabel } from '../lib/labels';
@@ -205,6 +207,90 @@ function GradePyramidChart({ title, data }) {
   );
 }
 
+const HEATMAP_DAYS = 365;
+
+// Single-hue sequential ramp, light -> dark, per the validated palette.
+// Index 0 is the neutral "no activity" cell.
+const HEATMAP_COLORS = ['#e1e0d9', '#cde2fb', '#9ec5f4', '#5598e7', '#1c5cab'];
+
+function toISODate(timestampMs) {
+  return new Date(timestampMs).toISOString().slice(0, 10);
+}
+
+function levelForCount(count, maxCount) {
+  if (count === 0 || maxCount === 0) return 0;
+  const ratio = count / maxCount;
+  if (ratio <= 0.25) return 1;
+  if (ratio <= 0.5) return 2;
+  if (ratio <= 0.75) return 3;
+  return 4;
+}
+
+function formatDateLabel(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+function buildActivityData(climbs) {
+  const countsByDate = {};
+  for (const climb of climbs) {
+    if (!climb.date) continue;
+    countsByDate[climb.date] = (countsByDate[climb.date] ?? 0) + 1;
+  }
+
+  const maxCount = Math.max(0, ...Object.values(countsByDate));
+
+  const now = new Date();
+  const endMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const startMs = endMs - (HEATMAP_DAYS - 1) * 24 * 60 * 60 * 1000;
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  const data = [];
+  for (let t = startMs; t <= endMs; t += dayMs) {
+    const date = toISODate(t);
+    const count = countsByDate[date] ?? 0;
+    data.push({ date, count, level: levelForCount(count, maxCount) });
+  }
+  return data;
+}
+
+function ActivityHeatmap({ climbs }) {
+  const data = useMemo(() => buildActivityData(climbs), [climbs]);
+  const totalClimbs = useMemo(() => data.reduce((sum, d) => sum + d.count, 0), [data]);
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <h3 className="text-sm font-semibold text-gray-700 mb-3">Activity Heatmap</h3>
+      <ActivityCalendar
+        data={data}
+        colorScheme="light"
+        theme={{ light: HEATMAP_COLORS }}
+        blockSize={11}
+        blockMargin={3}
+        blockRadius={2}
+        fontSize={12}
+        showWeekdayLabels
+        labels={{
+          totalCount: `${totalClimbs} climb${totalClimbs === 1 ? '' : 's'} in the last 12 months`,
+          legend: { less: 'Less', more: 'More' },
+        }}
+        tooltips={{
+          activity: {
+            text: (activity) =>
+              `${activity.count} climb${activity.count === 1 ? '' : 's'} on ${formatDateLabel(activity.date)}`,
+          },
+        }}
+      />
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { sessions, loading, error } = useSessionsData();
 
@@ -216,6 +302,7 @@ export default function Dashboard() {
           ...climb,
           discipline: session.discipline,
           venue_type: session.venue_type,
+          date: session.date,
         });
       }
     }
@@ -278,6 +365,8 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <ActivityHeatmap climbs={climbs} />
     </div>
   );
 }
