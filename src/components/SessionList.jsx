@@ -1,42 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useSessionsData } from '../lib/useSessionsData';
 
 export default function SessionList() {
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { sessions, setSessions, loading, error } = useSessionsData();
   const [deleteError, setDeleteError] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deletingIds, setDeletingIds] = useState(new Set());
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadSessions() {
-      setLoading(true);
-      setError(null);
-
-      const { data, error: fetchError } = await supabase
-        .from('sessions')
-        .select('*, climbs(*)')
-        .order('date', { ascending: false });
-
-      if (cancelled) return;
-
-      if (fetchError) {
-        setError(fetchError.message);
-      } else {
-        setSessions(data ?? []);
-      }
-      setLoading(false);
-    }
-
-    loadSessions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   function toggleSelected(id) {
     setSelectedIds((prev) => {

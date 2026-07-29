@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import SessionForm from './components/SessionForm'
 import SessionList from './components/SessionList'
+import Dashboard from './components/Dashboard'
 
 const TABS = [
   { id: 'log', label: 'Log Session' },
   { id: 'view', label: 'View Sessions' },
+  { id: 'dashboard', label: 'Dashboard' },
 ]
 
 function App() {
@@ -33,7 +35,9 @@ function App() {
         ))}
       </div>
 
-      {tab === 'log' ? <SessionForm /> : <SessionList />}
+      {tab === 'log' && <SessionForm />}
+      {tab === 'view' && <SessionList />}
+      {tab === 'dashboard' && <Dashboard />}
     </div>
   )
 }
