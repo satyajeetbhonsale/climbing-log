@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useSessionsData } from '../lib/useSessionsData';
+import { formatLabel } from '../lib/labels';
 
 export default function SessionList() {
   const { sessions, setSessions, loading, error } = useSessionsData();
@@ -122,7 +123,7 @@ export default function SessionList() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500">
-                    {session.venue_type} &middot; {session.discipline}
+                    {formatLabel(session.venue_type)} &middot; {formatLabel(session.discipline)}
                     {session.location ? ` · ${session.location}` : ''}
                   </span>
                   <button
@@ -145,7 +146,7 @@ export default function SessionList() {
                   {session.climbs.map((climb) => (
                     <li key={climb.id} className="py-1.5 flex flex-wrap gap-x-2">
                       <span className="font-medium">{climb.grade}</span>
-                      <span className="text-gray-500">{climb.send_type}</span>
+                      <span className="text-gray-500">{formatLabel(climb.send_type)}</span>
                       {climb.notes && (
                         <span className="text-gray-400">&mdash; {climb.notes}</span>
                       )}

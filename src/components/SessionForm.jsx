@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { getGradeSystem, getGradeOptions } from '../lib/grades';
+import { formatLabel } from '../lib/labels';
 
 const VENUE_TYPES = ['indoor', 'outdoor'];
 const DISCIPLINES = ['top-rope', 'lead', 'boulder'];
@@ -136,7 +137,7 @@ export default function SessionForm() {
               <option value="">Select...</option>
               {VENUE_TYPES.map((v) => (
                 <option key={v} value={v}>
-                  {v}
+                  {formatLabel(v)}
                 </option>
               ))}
             </select>
@@ -154,7 +155,7 @@ export default function SessionForm() {
               <option value="">Select...</option>
               {DISCIPLINES.map((d) => (
                 <option key={d} value={d}>
-                  {d}
+                  {formatLabel(d)}
                 </option>
               ))}
             </select>
@@ -228,7 +229,7 @@ export default function SessionForm() {
               >
                 {SEND_TYPES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {formatLabel(s)}
                   </option>
                 ))}
               </select>
