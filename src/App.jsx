@@ -2,6 +2,9 @@ import { useState } from 'react'
 import SessionForm from './components/SessionForm'
 import SessionList from './components/SessionList'
 import Dashboard from './components/Dashboard'
+import Login from './components/Login'
+import { useAuth } from './lib/useAuth'
+import { supabase } from './lib/supabaseClient'
 
 const TABS = [
   { id: 'log', label: 'Log Session' },
@@ -11,9 +14,32 @@ const TABS = [
 
 function App() {
   const [tab, setTab] = useState('log')
+  const { session, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return <Login />
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      <div className="flex justify-end max-w-4xl mx-auto px-6 mb-2">
+        <button
+          type="button"
+          onClick={() => supabase.auth.signOut()}
+          className="text-sm font-medium text-gray-500 hover:text-red-600"
+        >
+          Log out
+        </button>
+      </div>
+
       <h1 className="text-3xl font-bold text-gray-800 text-center mb-8">
         Climbing Tracker
       </h1>
